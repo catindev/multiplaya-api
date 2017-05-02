@@ -19,7 +19,8 @@
     "simple-rate-limiter": "^0.2.3",
     "request": "^2.81.0",
     "socket.io": "^1.7.3",
-    "mongoose": "^4.9.7"
+    "mongoose": "^4.9.7",
+    "request-promise": "^4.2.0"
   },
   "engines": {
     "node": "6.10.x"

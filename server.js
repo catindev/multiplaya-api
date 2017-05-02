@@ -1,6 +1,7 @@
 
 const taskRunner = require('./lib/task-runner');
-const Filter = require('./lib/local-filter');
+// const Filter = require('./lib/local-filter');
+const Filter = require('./lib/filter-by-db');
 const socketManager = require('./lib/socket-manager');
 
 const mongoose = require("mongoose");
@@ -23,34 +24,24 @@ io.on('connection', function (socket) {
     socketManager.connect({ socket: socket });
     socket.emit('welcome', { id: rid });
 
-    const localFilter = new Filter(rid);
+    const filterByDB = Filter(rid);
 
     socket.on('disconnect', function () {
         socketManager.disconnect({ id: rid });
     });
 
-    socket.on('fetch', function ({ dudes, id }) {
-        localFilter
-            .on('profileError', function ({ profile, error }) {
-                socketManager.emit({
-                    id: rid, event: 'profileError',
-                    data: { profile, error }
-                });
-            })
-            .on('localGames', function (games) {
-                console.log('local games', games.length);
-                socketManager.emit({
+    socket.on('fetch', function ({ profiles }) {
+        filterByDB(profiles)
+            .then(results => socketManager.emit({
                     id: rid, event: 'response',
-                    data: { items: games }
-                });
-            })
-            .on('filterFinish', function ({ queue }) {
+                    data: results
+                }))
+            .catch(error => {
                 socketManager.emit({
-                    id: rid, event: 'finish', data: { queue }
+                    id: rid, event: 'error',
+                    data: error
                 });
             });
-
-        localFilter.getGames(dudes);
     });
 });
 
