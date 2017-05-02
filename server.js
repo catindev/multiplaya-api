@@ -1,34 +1,60 @@
-const findGames = require('./lib/find-games');
-const multiplayerFilter = require('./lib/multiplayer-filter');
 
-const express = require('express');
-const app = express();
-const cors = require('cors');
-const apicache = require('apicache');
-const cache = apicache.middleware;
+const taskRunner = require('./lib/task-runner');
+const Filter = require('./lib/local-filter');
+const socketManager = require('./lib/socket-manager');
 
-app.use(cors());
-app.use(cache('5 minutes'));
+const mongoose = require("mongoose");
+mongoose.Promise = Promise;
+mongoose.connect('mongodb://muser:111@ds129031.mlab.com:29031/multiplaya');
 
-app.get("/v1/", (request, response) => {
-  const { dudes } = request.query;
-  const arrayOfDudes = dudes.split(',');
-  
-  if (arrayOfDudes.length <= 1) return response
-    .status(400)
-    .json({ error:400, message: 'Invalid dudes list'});
-  
-  findGames(dudes.split(','))
-    .then(multiplayerFilter)
-    .then(games => response.json(games))
-});
+const app = require('express')();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-app.get("/", (request, response) => response.json({ 
-  about: 'Multiplaya API',
-  currentVersion: 1
+app.get("/", (request, response) => response.json({
+    about: 'Multiplaya API',
+    currentVersion: 2
 }));
 
-const listener = app.listen(
-  process.env.PORT, 
-  () => console.log('Your app is listening on port ' + listener.address().port)
-);
+app.get("/connected", (request, response) => response.json(socketManager.list));
+
+io.on('connection', function (socket) {
+    const rid = socket.id;
+    socketManager.connect({ socket: socket });
+    socket.emit('welcome', { id: rid });
+
+    const localFilter = new Filter(rid);
+
+    socket.on('disconnect', function () {
+        socketManager.disconnect({ id: rid });
+    });
+
+    socket.on('fetch', function ({ dudes, id }) {
+        localFilter
+            .on('profileError', function ({ profile, error }) {
+                socketManager.emit({
+                    id: rid, event: 'profileError',
+                    data: { profile, error }
+                });
+            })
+            .on('localGames', function (games) {
+                console.log('local games', games.length);
+                socketManager.emit({
+                    id: rid, event: 'response',
+                    data: { items: games }
+                });
+            })
+            .on('filterFinish', function ({ queue }) {
+                socketManager.emit({
+                    id: rid, event: 'finish', data: { queue }
+                });
+            });
+
+        localFilter.getGames(dudes);
+    });
+});
+
+http.listen(process.env.PORT, function () {
+    taskRunner();
+    console.log('listening on', process.env.PORT);
+});

@@ -14,7 +14,12 @@
     "xml2json": "^0.11.0",
     "node-fetch": "^1.6.3",
     "apicache": "^0.8.4",
-    "cors": "^2.8.3"
+    "cors": "^2.8.3",
+    "function-rate-limit": "^1.1.0",
+    "simple-rate-limiter": "^0.2.3",
+    "request": "^2.81.0",
+    "socket.io": "^1.7.3",
+    "mongoose": "^4.9.7"
   },
   "engines": {
     "node": "6.10.x"
