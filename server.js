@@ -50,7 +50,7 @@ io.on('connection', function (socket) {
                 });
             });
 
-        localFilter.getGames(dudes.split(','));
+        localFilter.getGames(dudes);
     });
 });
 
