@@ -31,11 +31,14 @@ io.on('connection', function (socket) {
     });
 
     socket.on('fetch', function ({ profiles }) {
+        console.log(`🦄 ${rid} /request`, profiles);
         filterByDB(profiles)
-            .then(results => socketManager.emit({
+            .then(results => {
+                socketManager.emit({
                     id: rid, event: 'response',
                     data: results
-                }))
+                })
+            })
             .catch(error => {
                 socketManager.emit({
                     id: rid, event: 'error',
@@ -45,7 +48,7 @@ io.on('connection', function (socket) {
     });
 });
 
-http.listen(process.env.PORT, function () {
+http.listen(process.env.PORT || 9999, function () {
     taskRunner();
     console.log('listening on', process.env.PORT);
 });
