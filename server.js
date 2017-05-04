@@ -34,13 +34,14 @@ io.on('connection', function (socket) {
         console.log(`🦄 ${rid} /request`, profiles);
         filterByDB(profiles)
             .then(results => {
+                console.log(`😊 ${rid} responsed`);
                 socketManager.emit({
                     id: rid, event: 'response',
                     data: results
                 })
             })
             .catch(error => {
-                console.log('Server catch error');
+                console.log(`💩 ${rid} error`);
                 console.log(error);
                 socketManager.emit({
                     id: rid, event: 'ooops',
