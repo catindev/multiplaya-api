@@ -40,9 +40,11 @@ io.on('connection', function (socket) {
                 })
             })
             .catch(error => {
+                console.log('Server catch error');
+                console.log(error);
                 socketManager.emit({
-                    id: rid, event: 'error',
-                    data: error
+                    id: rid, event: 'ooops',
+                    data: error.message
                 });
             });
     });
